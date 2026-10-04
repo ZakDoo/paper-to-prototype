@@ -53,7 +53,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: python -m unittest discover
+        run: python -m unittest discover -s tests -p "test*.py" -v
         
   deploy:
     runs-on: ubuntu-latest
