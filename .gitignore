@@ -27,5 +27,4 @@ temp/
 *.stackdump
 dump/
 __pycache__/
-
 *.obsidian
