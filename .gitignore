@@ -1,4 +1,6 @@
 .env
+.venv/
+venv/
 target/
 
 .vscode/
@@ -24,6 +26,5 @@ temp/
 .history/
 *.stackdump
 dump/
-
-
+__pycache__/
 *.obsidian

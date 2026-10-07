@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paper-to-Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #132033;
+      --ink-soft: #3a4a5c;
+      --paper: #eef3f6;
+      --panel: rgba(255, 255, 255, 0.72);
+      --line: rgba(19, 32, 51, 0.12);
+      --accent: #0f766e;
+      --accent-deep: #0b4f4a;
+      --warn: #9a3412;
+      --shadow: 0 18px 50px rgba(19, 32, 51, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Sora", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(15, 118, 110, 0.16), transparent 34%),
+        radial-gradient(circle at 88% 8%, rgba(19, 32, 51, 0.1), transparent 28%),
+        linear-gradient(160deg, #f7fafc 0%, #e8eef3 48%, #dfe8ee 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(rgba(19, 32, 51, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(19, 32, 51, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 85%);
+    }
+
+    main {
+      position: relative;
+      width: min(920px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 4.5rem 0 5rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin: 0 0 1.25rem;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      animation: rise 0.7s ease both;
+    }
+
+    .brand-mark {
+      width: 0.7em;
+      height: 0.7em;
+      border-radius: 0.22em;
+      background: linear-gradient(145deg, var(--accent) 0%, var(--accent-deep) 100%);
+      box-shadow: 0 8px 20px rgba(15, 118, 110, 0.28);
+      animation: pulse 3.2s ease-in-out infinite;
+    }
+
+    .lede {
+      max-width: 34rem;
+      margin: 0 0 2.25rem;
+      color: var(--ink-soft);
+      font-size: 1.05rem;
+      line-height: 1.55;
+      animation: rise 0.7s ease 0.08s both;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 1.35rem;
+      animation: rise 0.7s ease 0.16s both;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .drop {
+      position: relative;
+      display: grid;
+      gap: 0.35rem;
+      justify-items: start;
+      padding: 1.4rem 1.25rem;
+      border: 1.5px dashed rgba(15, 118, 110, 0.35);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.55);
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .drop:hover,
+    .drop:focus-within,
+    .drop.is-dragover {
+      border-color: var(--accent);
+      background: rgba(15, 118, 110, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .drop strong {
+      font-size: 1rem;
+    }
+
+    .drop span {
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+    }
+
+    .drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-name {
+      min-height: 1.25rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      color: var(--accent-deep);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.85rem 1.35rem;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(15, 118, 110, 0.25);
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: wait;
+      box-shadow: none;
+    }
+
+    .status {
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+    }
+
+    .status[data-tone="error"] {
+      color: var(--warn);
+    }
+
+    .results {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 1.5rem;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+    }
+
+    .results.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.1rem 1.2rem;
+      box-shadow: 0 10px 28px rgba(19, 32, 51, 0.05);
+    }
+
+    .card h2 {
+      margin: 0 0 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+    }
+
+    .card p,
+    .card ol {
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .card ol {
+      padding-left: 1.2rem;
+    }
+
+    .card li + li {
+      margin-top: 0.35rem;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding-top: 2.5rem;
+      }
+
+      .panel {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="brand"><span class="brand-mark" aria-hidden="true"></span>Paper-to-Prototype</h1>
+    <p class="lede">
+      Upload a research PDF and get a compact research question, method, dataset, baseline, and an implementation plan you can start from.
+    </p>
+
+    <section class="panel" aria-label="Upload paper">
+      <form id="analyze-form">
+        <label class="drop" id="dropzone">
+          <strong>Drop a PDF here, or click to choose one</strong>
+          <span>Text-based papers work best. Max 10 MB.</span>
+          <input id="pdf-input" name="pdf_file" type="file" accept="application/pdf,.pdf" required />
+        </label>
+        <div class="file-name" id="file-name" aria-live="polite"></div>
+        <div class="actions">
+          <button type="submit" id="submit-btn">Analyze paper</button>
+          <div class="status" id="status" aria-live="polite"></div>
+        </div>
+      </form>
+    </section>
+
+    <section class="results" id="results" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const FIELDS = [
+      { key: "research_question", label: "Research question" },
+      { key: "method", label: "Method" },
+      { key: "dataset", label: "Dataset" },
+      { key: "baseline", label: "Baseline" },
+      { key: "implementation_plan", label: "Implementation plan" },
+    ];
+
+    const form = document.getElementById("analyze-form");
+    const input = document.getElementById("pdf-input");
+    const dropzone = document.getElementById("dropzone");
+    const fileName = document.getElementById("file-name");
+    const submitBtn = document.getElementById("submit-btn");
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+
+    function setStatus(message, tone = "") {
+      statusEl.textContent = message;
+      statusEl.dataset.tone = tone;
+    }
+
+    function renderValue(value) {
+      if (Array.isArray(value)) {
+        return `<ol>${value.map((item) => `<li>${escapeHtml(String(item))}</li>`).join("")}</ol>`;
+      }
+      if (value && typeof value === "object") {
+        return `<p>${escapeHtml(JSON.stringify(value, null, 2))}</p>`;
+      }
+      return `<p>${escapeHtml(value == null || value === "" ? "not stated in the paper" : String(value))}</p>`;
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function showResults(data) {
+      resultsEl.innerHTML = FIELDS.map(({ key, label }) => `
+        <article class="card">
+          <h2>${label}</h2>
+          ${renderValue(data[key])}
+        </article>
+      `).join("");
+      resultsEl.classList.add("is-visible");
+    }
+
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      fileName.textContent = file ? file.name : "";
+      setStatus("");
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.add("is-dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("is-dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", (event) => {
+      const file = event.dataTransfer?.files?.[0];
+      if (!file) return;
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      input.files = transfer.files;
+      fileName.textContent = file.name;
+      setStatus("");
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const file = input.files?.[0];
+      if (!file) {
+        setStatus("Choose a PDF first.", "error");
+        return;
+      }
+      if (!file.name.toLowerCase().endsWith(".pdf") && file.type !== "application/pdf") {
+        setStatus("Only PDF files are supported.", "error");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setStatus("File is larger than 10 MB.", "error");
+        return;
+      }
+
+      const body = new FormData();
+      body.append("pdf_file", file);
+
+      submitBtn.disabled = true;
+      setStatus("Reading the paper…");
+      resultsEl.classList.remove("is-visible");
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 180000);
+
+      try {
+        const response = await fetch("/analyze/", {
+          method: "POST",
+          body,
+          signal: controller.signal,
+        });
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(text || `Request failed with ${response.status}`);
+        }
+        if (!response.ok) {
+          throw new Error(data.detail || data.error || text || `Request failed with ${response.status}`);
+        }
+        showResults(data);
+        setStatus("Done.");
+      } catch (error) {
+        const message = error.name === "AbortError"
+          ? "Timed out while reading the paper."
+          : (error.message || "Something went wrong.");
+        setStatus(message, "error");
+      } finally {
+        clearTimeout(timeout);
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
