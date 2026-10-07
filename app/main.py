@@ -1,27 +1,25 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import json
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+
+from app.routes import analyze
+
+WEB_DIR = Path(__file__).resolve().parents[1] / "web"
+
+app = FastAPI(
+    title="Paper To Prototype API",
+    version="1.0.0",
+)
+
+app.include_router(analyze.router)
 
 
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/health":
-            response = {
-                "status": "ok",
-            }
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode())
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-    def log_message(self, format, *args):
-        return
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
-if __name__ == "__main__":
-    server = HTTPServer(("0.0.0.0", 8000), HealthHandler)
-    print("Server running on port 8000")
-    server.serve_forever()
+@app.get("/")
+def index():
+    return FileResponse(WEB_DIR / "index.html")
